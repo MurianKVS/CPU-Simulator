@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SimuladorOC — Organização de Computadores</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css">
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="header-logo">
+      <span class="logo-dot"></span>
+      SimuladorOC
+      <span class="logo-sub">/ Organização de Computadores</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn-icon" id="btn-theme" title="Alternar tema">☀️</button>
+      <button class="btn-icon ula-peek-btn" id="btn-ula-modal" style="width:auto;padding:0 10px;font-size:11px;">
+        🔬 Ver por dentro da ULA
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== LAYOUT PRINCIPAL ===== -->
+  <div class="main">
+
+    <!-- ===== ÁREA DA ARQUITETURA ===== -->
+    <div class="arch-area" id="arch-area">
+
+      <!-- Ciclo de instrução -->
+      <div class="cycle-bar">
+        <span class="cycle-bar-label">Ciclo:</span>
+        <div class="cycle-step" id="cs-fetch">
+          <span class="cs-num">1</span>
+          <span class="cs-name">Fetch</span>
+          <span class="cs-pt">Busca</span>
+        </div>
+        <span class="cycle-arrow">›</span>
+        <div class="cycle-step" id="cs-decode">
+          <span class="cs-num">2</span>
+          <span class="cs-name">Decode</span>
+          <span class="cs-pt">Decodificação</span>
+        </div>
+        <span class="cycle-arrow">›</span>
+        <div class="cycle-step" id="cs-execute">
+          <span class="cs-num">3</span>
+          <span class="cs-name">Execute</span>
+          <span class="cs-pt">Execução</span>
+        </div>
+        <span class="cycle-arrow">›</span>
+        <div class="cycle-step" id="cs-memory">
+          <span class="cs-num">4</span>
+          <span class="cs-name">Memory</span>
+          <span class="cs-pt">Memória</span>
+        </div>
+        <span class="cycle-arrow">›</span>
+        <div class="cycle-step" id="cs-writeback">
+          <span class="cs-num">5</span>
+          <span class="cs-name">Writeback</span>
+          <span class="cs-pt">Escrita</span>
+        </div>
+      </div>
+
+      <!-- CPU -->
+      <div class="cpu-box" id="comp-cpu">
+        <span class="cpu-label">CPU — Unidade Central de Processamento</span>
+        <div class="cpu-inner">
+
+          <!-- Registrador R1 -->
+          <div class="comp reg" id="comp-r1"
+            data-tippy-content='<div class="tooltip-title">Registrador R1</div>Memória minúscula dentro da CPU. É a mais rápida do computador. Guarda temporariamente os dados que estão sendo usados agora.'>
+            <div class="comp-label">R1 <span class="comp-tag">Registrador</span></div>
+            <div class="comp-value empty" id="val-r1">—</div>
+          </div>
+
+          <!-- Registrador R2 -->
+          <div class="comp reg" id="comp-r2"
+            data-tippy-content='<div class="tooltip-title">Registrador R2</div>Igual ao R1. Juntos, R1 e R2 fornecem os dois operandos para a ULA calcular.'>
+            <div class="comp-label">R2 <span class="comp-tag">Registrador</span></div>
+            <div class="comp-value empty" id="val-r2">—</div>
+          </div>
+
+          <!-- ULA -->
+          <div class="comp ula" id="comp-ula"
+            data-tippy-content='<div class="tooltip-title">ULA</div>Realiza todos os cálculos: soma, subtração e operações lógicas (AND, OR, NOT). Recebe dois valores dos registradores e devolve o resultado.'>
+            <div class="comp-label">ULA <span class="comp-tag">Aritmética</span></div>
+            <div class="comp-value empty" id="val-ula">—</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Cache + RAM -->
+      <div class="mem-row">
+
+        <!-- Cache -->
+        <div class="comp cache" id="comp-cache"
+          data-tippy-content='<div class="tooltip-title">Cache</div>Memória intermediária entre a CPU e a RAM. Muito mais rápida que a RAM. Guarda dados usados recentemente para acesso ágil.'>
+          <div class="comp-label">Cache <span class="comp-tag">L1</span></div>
+          <div class="comp-value empty" id="val-cache">—</div>
+        </div>
+
+        <!-- RAM -->
+        <div class="comp ram" id="comp-ram"
+          data-tippy-content='<div class="tooltip-title">Memória RAM</div>Memória principal do computador. Guarda os dados e programas em uso. É volátil: perde tudo ao desligar.'>
+          <div class="comp-label">RAM <span class="comp-tag">Principal</span></div>
+          <table class="ram-table">
+            <thead>
+              <tr>
+                <th>Endereço</th>
+                <th>Valor</th>
+                <th>Rótulo</th>
+              </tr>
+            </thead>
+            <tbody id="ram-body">
+              <tr><td>0x00</td><td id="ram-0x00">—</td><td>—</td></tr>
+              <tr><td>0x01</td><td id="ram-0x01">—</td><td>—</td></tr>
+              <tr><td>0x02</td><td id="ram-0x02">—</td><td>—</td></tr>
+              <tr><td>0x03</td><td id="ram-0x03">—</td><td>—</td></tr>
+              <tr><td>0x04</td><td id="ram-0x04">—</td><td>—</td></tr>
+              <tr><td>0x05</td><td id="ram-0x05">—</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- HD/SSD -->
+      <div class="comp hd" id="comp-hd"
+        data-tippy-content='<div class="tooltip-title">HD / SSD</div>Armazenamento permanente. Muito mais lento que a RAM, mas nunca perde os dados. É onde ficam seus arquivos e programas.'>
+        <div class="comp-label">HD / SSD <span class="comp-tag">Armazenamento</span></div>
+        <div class="hd-entries" id="hd-entries">
+          <span class="hd-empty">Nenhum dado gravado ainda.</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar">
+
+      <!-- Entrada de dados -->
+      <div class="sidebar-section">
+        <div class="sidebar-title">Entrada de dados</div>
+        <div class="input-row">
+          <div class="input-group">
+            <label for="input-a">Valor A</label>
+            <input type="number" id="input-a" value="8" min="-999" max="999">
+          </div>
+          <div class="input-group">
+            <label for="input-b">Valor B</label>
+            <input type="number" id="input-b" value="5" min="-999" max="999">
+          </div>
+        </div>
+
+        <div class="sidebar-title">Operação</div>
+        <div class="op-grid">
+          <button class="op-btn selected" data-op="add">+</button>
+          <button class="op-btn" data-op="sub">−</button>
+          <button class="op-btn" data-op="and">AND</button>
+          <button class="op-btn" data-op="or">OR</button>
+          <button class="op-btn" data-op="not">NOT</button>
+        </div>
+
+        <div class="ctrl-row">
+          <button class="btn primary" id="btn-step">▶ Próximo passo</button>
+          <button class="btn" id="btn-auto">⏩ Automático</button>
+        </div>
+        <div class="ctrl-row">
+          <button class="btn danger" id="btn-reset" style="grid-column:1/-1">↺ Resetar</button>
+        </div>
+
+        <div class="speed-row">
+          <label>Velocidade:</label>
+          <input type="range" id="speed-range" min="300" max="2000" value="900" step="100">
+          <span class="speed-val" id="speed-val">0.9s</span>
+        </div>
+      </div>
+
+      <!-- Progresso -->
+      <div class="progress-section">
+        <div class="progress-dots" id="progress-dots"></div>
+        <span class="progress-text" id="progress-text">0 / 0</span>
+      </div>
+
+      <!-- Log didático -->
+      <div class="log-area" id="log-area">
+        <div class="log-placeholder">
+          Insira dois valores, escolha uma operação e clique em <strong>Próximo passo</strong> para iniciar a simulação.
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+  <!-- ===== MODAL — MINI SIMULADOR ULA ===== -->
+  <div class="ula-modal-overlay" id="ula-modal-overlay">
+    <div class="ula-modal">
+      <div class="ula-modal-header">
+        <div class="ula-modal-title">🔬 Por dentro da ULA — Portas Lógicas</div>
+        <button class="ula-modal-close" id="ula-modal-close">✕</button>
+      </div>
+
+      <p style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6;">
+        A ULA executa operações lógicas usando <strong>portas lógicas</strong> — circuitos que recebem bits (0 ou 1) e produzem um resultado. Clique nos bits abaixo para alterná-los e veja o resultado em tempo real.
+      </p>
+
+      <div class="gates-grid">
+
+        <!-- AND -->
+        <div class="gate-card">
+          <div class="gate-name">AND</div>
+          <div class="gate-inputs">
+            <div class="gate-input-row">
+              <label>A</label>
+              <button class="bit-toggle" data-gate="and" data-input="a">0</button>
+            </div>
+            <div class="gate-input-row">
+              <label>B</label>
+              <button class="bit-toggle" data-gate="and" data-input="b">0</button>
+            </div>
+          </div>
+          <div class="gate-result">
+            <label>Saída:</label>
+            <span class="gate-result-val" id="gate-and-result">0</span>
+          </div>
+          <table class="gate-truth">
+            <thead><tr><th>A</th><th>B</th><th>Saída</th></tr></thead>
+            <tbody>
+              <tr id="and-00"><td>0</td><td>0</td><td>0</td></tr>
+              <tr id="and-01"><td>0</td><td>1</td><td>0</td></tr>
+              <tr id="and-10"><td>1</td><td>0</td><td>0</td></tr>
+              <tr id="and-11"><td>1</td><td>1</td><td>1</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- OR -->
+        <div class="gate-card">
+          <div class="gate-name">OR</div>
+          <div class="gate-inputs">
+            <div class="gate-input-row">
+              <label>A</label>
+              <button class="bit-toggle" data-gate="or" data-input="a">0</button>
+            </div>
+            <div class="gate-input-row">
+              <label>B</label>
+              <button class="bit-toggle" data-gate="or" data-input="b">0</button>
+            </div>
+          </div>
+          <div class="gate-result">
+            <label>Saída:</label>
+            <span class="gate-result-val" id="gate-or-result">0</span>
+          </div>
+          <table class="gate-truth">
+            <thead><tr><th>A</th><th>B</th><th>Saída</th></tr></thead>
+            <tbody>
+              <tr id="or-00"><td>0</td><td>0</td><td>0</td></tr>
+              <tr id="or-01"><td>0</td><td>1</td><td>1</td></tr>
+              <tr id="or-10"><td>1</td><td>0</td><td>1</td></tr>
+              <tr id="or-11"><td>1</td><td>1</td><td>1</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- NOT -->
+        <div class="gate-card">
+          <div class="gate-name">NOT</div>
+          <div class="gate-inputs">
+            <div class="gate-input-row">
+              <label>A</label>
+              <button class="bit-toggle" data-gate="not" data-input="a">0</button>
+            </div>
+          </div>
+          <div class="gate-result">
+            <label>Saída:</label>
+            <span class="gate-result-val" id="gate-not-result">1</span>
+          </div>
+          <table class="gate-truth">
+            <thead><tr><th>A</th><th>Saída</th></tr></thead>
+            <tbody>
+              <tr id="not-0"><td>0</td><td>1</td></tr>
+              <tr id="not-1"><td>1</td><td>0</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <p style="font-size:11px;color:var(--text3);line-height:1.6;">
+        <strong style="color:var(--text2)">AND:</strong> só retorna 1 se <em>ambas</em> as entradas forem 1. &nbsp;
+        <strong style="color:var(--text2)">OR:</strong> retorna 1 se <em>pelo menos uma</em> entrada for 1. &nbsp;
+        <strong style="color:var(--text2)">NOT:</strong> <em>inverte</em> a entrada — 0 vira 1, 1 vira 0.
+      </p>
+    </div>
+  </div>
+
+  <!-- Scripts externos -->
+  <script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.min.js"></script>
+  <script src="https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+  <!-- Script principal -->
+  <script src="js/simulator.js"></script>
+
+</body>
+</html>
