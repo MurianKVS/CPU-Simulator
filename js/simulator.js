@@ -1,8 +1,7 @@
-/* ===== ESTADO GLOBAL ===== */
+/* ===== ESTADO ===== */
 const state = {
   stepIndex: 0,
   steps: [],
-  running: false,
   autoTimer: null,
   op: 'add',
   gateStates: {
@@ -12,33 +11,56 @@ const state = {
   },
 };
 
-/* ===== MAPA: qual ciclo cada etapa pertence ===== */
-const stepToCycle = [
-  'fetch',      // 0 - entrada/fetch
-  'fetch',      // 1 - armazena RAM
-  'decode',     // 2 - cache
-  'execute',    // 3 - RAM → R1
-  'execute',    // 4 - RAM → R2
-  'execute',    // 5 - registradores → ULA
-  'execute',    // 6 - ULA calcula
-  'writeback',  // 7 - resultado → R1
-  'memory',     // 8 - resultado → RAM
-  'memory',     // 9 - RAM → HD
-];
+/* ===== UTILITÁRIOS ===== */
+function toBin(n, bits = 8) {
+  if (n < 0) {
+    // complemento de dois para negativos
+    return (n >>> 0).toString(2).slice(-bits);
+  }
+  return n.toString(2).padStart(bits, '0');
+}
+
+function binResult(a, b, op) {
+  const binA = toBin(a);
+  const binB = toBin(b);
+  switch (op) {
+    case 'and': return { binA, binB, binR: toBin(a & b), result: a & b };
+    case 'or':  return { binA, binB, binR: toBin(a | b), result: a | b };
+    case 'not': return { binA, binR: toBin(~a),          result: ~a };
+  }
+}
 
 /* ===== MONTAGEM DOS PASSOS ===== */
 function buildSteps(a, b, op) {
+  const isLogical = ['and', 'or', 'not'].includes(op);
+  const isUnary   = op === 'not';
+
   const opMap = {
-    add: { sym: '+',   label: 'Soma',      fn: (x, y) => x + y },
-    sub: { sym: '−',   label: 'Subtração', fn: (x, y) => x - y },
-    and: { sym: 'AND', label: 'AND',       fn: (x, y) => x & y },
-    or:  { sym: 'OR',  label: 'OR',        fn: (x, y) => x | y },
-    not: { sym: 'NOT', label: 'NOT',       fn: (x)    => ~x },
+    add: { sym: '+',   label: 'Soma',      fn: () => a + b },
+    sub: { sym: '−',   label: 'Subtração', fn: () => a - b },
+    and: { sym: 'AND', label: 'AND',       fn: () => a & b },
+    or:  { sym: 'OR',  label: 'OR',        fn: () => a | b },
+    not: { sym: 'NOT', label: 'NOT',       fn: () => ~a    },
   };
 
-  const o = opMap[op];
-  const isUnary = op === 'not';
-  const result = isUnary ? o.fn(a) : o.fn(a, b);
+  const o      = opMap[op];
+  const result = o.fn();
+
+  const logicalBinBlock = () => {
+    if (!isLogical) return '';
+    const { binA, binB, binR } = binResult(a, b, op);
+    if (isUnary) {
+      return `<span class="binary-block">
+  A   = ${a} → <span class="bin-hi">${binA}</span>
+  NOT = <span class="bin-hi">${binR}</span> → ${result}
+</span>`;
+    }
+    return `<span class="binary-block">
+  A   = ${a} → <span class="bin-hi">${binA}</span>
+  B   = ${b} → <span class="bin-hi">${binB}</span>
+  ${op.toUpperCase()} = <span class="bin-hi">${binR}</span> → ${result}
+</span>`;
+  };
 
   return [
     {
@@ -56,7 +78,7 @@ function buildSteps(a, b, op) {
       cycleStep: 'fetch',
       tag: 'Fetch — Armazenar na RAM',
       tagClass: 'ram-tag',
-      log: `Os valores <strong>${a}</strong>${isUnary ? '' : ` e <strong>${b}</strong>`} foram gravados na RAM nos endereços <strong>0x00</strong>${isUnary ? '' : ` e <strong>0x01</strong>`}. A RAM é a memória principal: rápida o suficiente para uso diário, mas <strong>volátil</strong> — perde tudo quando o computador é desligado.`,
+      log: `Os valores foram gravados na RAM: <strong>${a}</strong> no endereço <strong>0x00</strong>${isUnary ? '' : ` e <strong>${b}</strong> no endereço <strong>0x01</strong>`}. A RAM é a memória principal: rápida o suficiente para uso diário, mas <strong>volátil</strong> — perde tudo quando o computador é desligado.`,
       action: () => {
         setRam('0x00', a, 'Valor A');
         if (!isUnary) setRam('0x01', b, 'Valor B');
@@ -109,7 +131,7 @@ function buildSteps(a, b, op) {
       action: () => {
         setVal('val-ula', isUnary ? `${o.sym}(${a})` : `${a} ${o.sym} ${b}`);
         animateParticle('comp-r1', 'comp-ula');
-        if (!isUnary) setTimeout(() => animateParticle('comp-r2', 'comp-ula'), 150);
+        if (!isUnary) setTimeout(() => animateParticle('comp-r2', 'comp-ula'), 160);
       }
     },
     {
@@ -118,7 +140,9 @@ function buildSteps(a, b, op) {
       cycleStep: 'execute',
       tag: `Execute — ULA calcula ${o.label}`,
       tagClass: 'ula-tag',
-      log: `A ULA calculou <strong>${isUnary ? `${o.sym}(${a})` : `${a} ${o.sym} ${b}`} = ${result}</strong>. Este é o momento central da simulação: o processamento de fato aconteceu. Tudo antes era preparação — tudo depois é guardar o resultado.`,
+      log: isLogical
+        ? `A ULA executou a operação <strong>${o.label}</strong> bit a bit. Cada bit de A é combinado com o bit correspondente de B usando a regra do ${o.label}. O resultado decimal é <strong>${result}</strong>.${logicalBinBlock()}`
+        : `A ULA calculou <strong>${a} ${o.sym} ${b} = ${result}</strong>. Este é o momento central da simulação: o processamento de fato aconteceu. Tudo antes era preparação — tudo depois é guardar o resultado.`,
       action: () => {
         setVal('val-ula', `= ${result}`);
       }
@@ -154,16 +178,16 @@ function buildSteps(a, b, op) {
       cycleStep: 'memory',
       tag: 'Memory — Gravar no HD/SSD',
       tagClass: 'hd-tag',
-      log: `O resultado <strong>${result}</strong> foi salvo no <strong>HD/SSD</strong>. Diferente da RAM, o armazenamento secundário é <strong>permanente</strong> — mantém os dados mesmo sem energia. É mais lento, mas nunca esquece. ✅ Simulação concluída!`,
+      log: `O resultado <strong>${result}</strong> foi salvo no <strong>HD/SSD</strong>. Diferente da RAM, o armazenamento secundário é <strong>permanente</strong> — mantém os dados mesmo sem energia. É mais lento, mas nunca esquece. <i class="fa-solid fa-circle-check" style="color:var(--r-c)"></i> Simulação concluída!`,
       action: () => {
-        addHdEntry(`resultado_${Date.now() % 10000}`, result);
+        addHdEntry(`resultado_${String(Date.now()).slice(-4)}`, result);
         animateParticle('comp-ram', 'comp-hd');
       }
     },
   ];
 }
 
-/* ===== INICIALIZAÇÃO ===== */
+/* ===== INIT ===== */
 document.addEventListener('DOMContentLoaded', () => {
   setupOpButtons();
   setupControls();
@@ -187,7 +211,7 @@ function setupOpButtons() {
   });
 }
 
-/* ===== CONTROLES PRINCIPAIS ===== */
+/* ===== CONTROLES ===== */
 function setupControls() {
   document.getElementById('btn-step').addEventListener('click', stepForward);
   document.getElementById('btn-auto').addEventListener('click', toggleAuto);
@@ -214,22 +238,23 @@ function stepForward() {
 
   const btn = document.getElementById('btn-step');
   if (state.stepIndex >= state.steps.length) {
-    btn.textContent = '↺ Recomeçar';
+    btn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> Recomeçar';
   } else {
-    btn.textContent = `▶ Passo ${state.stepIndex + 1} / ${state.steps.length}`;
+    btn.innerHTML = `<i class="fa-solid fa-play"></i> Passo ${state.stepIndex + 1} / ${state.steps.length}`;
   }
 }
 
 function toggleAuto() {
   const btn = document.getElementById('btn-auto');
+
   if (state.autoTimer) {
     clearInterval(state.autoTimer);
     state.autoTimer = null;
-    btn.textContent = '⏩ Automático';
+    btn.innerHTML = '<i class="fa-solid fa-forward"></i> Automático';
     return;
   }
 
-  btn.textContent = '⏸ Pausar';
+  btn.innerHTML = '<i class="fa-solid fa-pause"></i> Pausar';
   const delay = parseInt(document.getElementById('speed-range').value);
 
   stepForward();
@@ -238,7 +263,7 @@ function toggleAuto() {
     if (state.stepIndex >= state.steps.length) {
       clearInterval(state.autoTimer);
       state.autoTimer = null;
-      btn.textContent = '⏩ Automático';
+      btn.innerHTML = '<i class="fa-solid fa-forward"></i> Automático';
       return;
     }
     stepForward();
@@ -251,8 +276,8 @@ function resetSim() {
   state.stepIndex = 0;
   state.steps = [];
 
-  document.getElementById('btn-step').textContent = '▶ Próximo passo';
-  document.getElementById('btn-auto').textContent = '⏩ Automático';
+  document.getElementById('btn-step').innerHTML = '<i class="fa-solid fa-play"></i> Próximo passo';
+  document.getElementById('btn-auto').innerHTML = '<i class="fa-solid fa-forward"></i> Automático';
 
   setVal('val-r1', '—', true);
   setVal('val-r2', '—', true);
@@ -268,19 +293,16 @@ function resetSim() {
   document.getElementById('progress-text').textContent = '0 / 0';
 }
 
-/* ===== EXECUTAR UM PASSO ===== */
+/* ===== EXECUTAR PASSO ===== */
 function executeStep(step) {
   clearActiveComps();
-  step.active.forEach(id => {
-    document.getElementById(id)?.classList.add('active');
-  });
-
+  step.active.forEach(id => document.getElementById(id)?.classList.add('active'));
   highlightCycleStep(step.cycleStep);
   step.action();
   addLog(step.tag, step.tagClass, step.log);
 }
 
-/* ===== FUNÇÕES DE UI ===== */
+/* ===== UI HELPERS ===== */
 function setVal(id, val, empty = false) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -290,25 +312,25 @@ function setVal(id, val, empty = false) {
 
 function setRam(addr, val, label = '') {
   const cell = document.getElementById(`ram-${addr}`);
+  const labelCell = document.getElementById(`ram-${addr}-label`);
   if (!cell) return;
   cell.textContent = val;
   cell.classList.add('val-changed');
+  if (label && labelCell) labelCell.textContent = label;
   const row = cell.parentElement;
-  if (label) row.children[2].textContent = label;
   row.classList.add('ram-active');
   setTimeout(() => {
     cell.classList.remove('val-changed');
     row.classList.remove('ram-active');
-  }, 1200);
+  }, 1400);
 }
 
 function clearRam() {
   ['0x00','0x01','0x02','0x03','0x04','0x05'].forEach(addr => {
     const cell = document.getElementById(`ram-${addr}`);
-    if (cell) {
-      cell.textContent = '—';
-      cell.parentElement.children[2].textContent = '—';
-    }
+    const labelCell = document.getElementById(`ram-${addr}-label`);
+    if (cell) cell.textContent = '—';
+    if (labelCell) labelCell.textContent = '—';
   });
 }
 
@@ -316,7 +338,6 @@ function addHdEntry(key, val) {
   const container = document.getElementById('hd-entries');
   const empty = container.querySelector('.hd-empty');
   if (empty) empty.remove();
-
   const entry = document.createElement('div');
   entry.className = 'hd-entry new-entry';
   entry.innerHTML = `<span class="hd-key">${key}</span><span>${val}</span>`;
@@ -324,37 +345,28 @@ function addHdEntry(key, val) {
 }
 
 function clearHd() {
-  const container = document.getElementById('hd-entries');
-  container.innerHTML = '<span class="hd-empty">Nenhum dado gravado ainda.</span>';
+  document.getElementById('hd-entries').innerHTML = '<span class="hd-empty">Nenhum dado gravado ainda.</span>';
 }
 
 function addLog(tag, tagClass, text) {
   const area = document.getElementById('log-area');
   const placeholder = area.querySelector('.log-placeholder');
   if (placeholder) placeholder.remove();
-
   const entry = document.createElement('div');
   entry.className = 'log-entry';
-  entry.innerHTML = `
-    <div class="log-tag ${tagClass}">${tag}</div>
-    <div class="log-text">${text}</div>
-  `;
-
+  entry.innerHTML = `<div class="log-tag ${tagClass}">${tag}</div><div class="log-text">${text}</div>`;
   area.insertBefore(entry, area.firstChild);
 }
 
 function clearLog() {
-  const area = document.getElementById('log-area');
-  area.innerHTML = '<div class="log-placeholder">Insira dois valores, escolha uma operação e clique em <strong>Próximo passo</strong> para iniciar a simulação.</div>';
+  document.getElementById('log-area').innerHTML = '<div class="log-placeholder">Insira dois valores, escolha uma operação e clique em <strong>Próximo passo</strong> para iniciar a simulação.</div>';
 }
 
 function clearActiveComps() {
-  document.querySelectorAll('.comp.active, .cpu-box.active').forEach(el => {
-    el.classList.remove('active');
-  });
+  document.querySelectorAll('.comp.active, .cpu-box.active').forEach(el => el.classList.remove('active'));
 }
 
-/* ===== CICLO DE INSTRUÇÃO ===== */
+/* ===== CICLO ===== */
 const cycleIds = ['fetch', 'decode', 'execute', 'memory', 'writeback'];
 
 function highlightCycleStep(step) {
@@ -362,17 +374,13 @@ function highlightCycleStep(step) {
     const el = document.getElementById(`cs-${id}`);
     if (!el) return;
     el.classList.remove('active', 'done');
-    const idx = cycleIds.indexOf(id);
-    const activeIdx = cycleIds.indexOf(step);
     if (id === step) el.classList.add('active');
-    else if (idx < activeIdx) el.classList.add('done');
+    else if (cycleIds.indexOf(id) < cycleIds.indexOf(step)) el.classList.add('done');
   });
 }
 
 function clearCycleSteps() {
-  cycleIds.forEach(id => {
-    document.getElementById(`cs-${id}`)?.classList.remove('active', 'done');
-  });
+  cycleIds.forEach(id => document.getElementById(`cs-${id}`)?.classList.remove('active', 'done'));
 }
 
 /* ===== PROGRESSO ===== */
@@ -399,7 +407,7 @@ function updateProgressDots() {
   }
 }
 
-/* ===== ANIMAÇÃO DE PARTÍCULA ===== */
+/* ===== ANIMAÇÃO ===== */
 function animateParticle(fromId, toId) {
   const from = document.getElementById(fromId);
   const to   = document.getElementById(toId);
@@ -423,7 +431,7 @@ function animateParticle(fromId, toId) {
     targets: particle,
     left: endX,
     top: endY,
-    duration: 600,
+    duration: 550,
     easing: 'easeInOutQuad',
     complete: () => particle.remove(),
   });
@@ -431,19 +439,19 @@ function animateParticle(fromId, toId) {
 
 /* ===== TEMA ===== */
 function setupTheme() {
-  const btn = document.getElementById('btn-theme');
+  const btn  = document.getElementById('btn-theme');
+  const icon = document.getElementById('theme-icon');
   const html = document.documentElement;
 
   const saved = localStorage.getItem('oc-theme') || 'light';
   html.setAttribute('data-theme', saved);
-  btn.textContent = saved === 'dark' ? '☀️' : '🌙';
+  icon.className = saved === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
 
   btn.addEventListener('click', () => {
-    const current = html.getAttribute('data-theme');
-    const next = current === 'dark' ? 'light' : 'dark';
+    const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     html.setAttribute('data-theme', next);
     localStorage.setItem('oc-theme', next);
-    btn.textContent = next === 'dark' ? '☀️' : '🌙';
+    icon.className = next === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
   });
 }
 
@@ -470,32 +478,24 @@ function setupSpeedSlider() {
 /* ===== MODAL ULA ===== */
 function setupUlaModal() {
   const overlay = document.getElementById('ula-modal-overlay');
-  document.getElementById('btn-ula-modal').addEventListener('click', () => {
-    overlay.classList.add('open');
-  });
-  document.getElementById('ula-modal-close').addEventListener('click', () => {
-    overlay.classList.remove('open');
-  });
-  overlay.addEventListener('click', e => {
-    if (e.target === overlay) overlay.classList.remove('open');
-  });
+  document.getElementById('btn-ula-modal').addEventListener('click', () => overlay.classList.add('open'));
+  document.getElementById('ula-modal-close').addEventListener('click', () => overlay.classList.remove('open'));
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
 }
 
-/* ===== MINI SIMULADOR DE PORTAS LÓGICAS ===== */
+/* ===== PORTAS LÓGICAS ===== */
 function setupGates() {
   document.querySelectorAll('.bit-toggle').forEach(btn => {
     btn.addEventListener('click', () => {
       const gate  = btn.dataset.gate;
       const input = btn.dataset.input;
-      const current = state.gateStates[gate][input];
-      const next = current === 0 ? 1 : 0;
+      const next  = state.gateStates[gate][input] === 0 ? 1 : 0;
       state.gateStates[gate][input] = next;
       btn.textContent = next;
       btn.classList.toggle('on', next === 1);
       updateGateResult(gate);
     });
   });
-
   updateGateResult('and');
   updateGateResult('or');
   updateGateResult('not');
@@ -503,27 +503,27 @@ function setupGates() {
 
 function updateGateResult(gate) {
   const s = state.gateStates;
-  let result;
+  let result, key;
 
   if (gate === 'and') {
     result = s.and.a & s.and.b;
+    key = `${s.and.a}${s.and.b}`;
     document.getElementById('gate-and-result').textContent = result;
-    highlightTruth('and', `${s.and.a}${s.and.b}`);
+    highlightTruth('and', key);
   } else if (gate === 'or') {
     result = s.or.a | s.or.b;
+    key = `${s.or.a}${s.or.b}`;
     document.getElementById('gate-or-result').textContent = result;
-    highlightTruth('or', `${s.or.a}${s.or.b}`);
+    highlightTruth('or', key);
   } else if (gate === 'not') {
     result = s.not.a === 0 ? 1 : 0;
+    key = `${s.not.a}`;
     document.getElementById('gate-not-result').textContent = result;
-    highlightTruth('not', `${s.not.a}`);
+    highlightTruth('not', key);
   }
 }
 
 function highlightTruth(gate, key) {
-  const prefix = gate === 'not' ? `not-${key}` : `${gate}-${key}`;
-  const allRows = document.querySelectorAll(`[id^="${gate}-"]`);
-  allRows.forEach(r => r.classList.remove('highlight'));
-  const target = document.getElementById(prefix);
-  if (target) target.classList.add('highlight');
+  document.querySelectorAll(`[id^="${gate}-"]`).forEach(r => r.classList.remove('highlight'));
+  document.getElementById(`${gate}-${key}`)?.classList.add('highlight');
 }
