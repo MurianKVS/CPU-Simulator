@@ -53,13 +53,13 @@ body {
   color: var(--text);
   min-height: 100vh;
   transition: background var(--transition), color var(--transition);
-  font-size: 15px;
+  font-size: 18px;
   line-height: 1.5;
 }
 
 /* ===== HEADER ===== */
 .header {
-  height: 56px;
+  height: 70px;
   background: var(--surface);
   border-bottom: 2px solid var(--accent);
   display: flex;
@@ -79,7 +79,7 @@ body {
 }
 
 .logo-main {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text);
   letter-spacing: -0.01rem;
@@ -97,7 +97,7 @@ body {
 }
 
 .logo-sub {
-  font-size: 10px;
+  font-size: 12.7px;
   font-weight: 400;
   color: var(--text3);
   letter-spacing: 0.03em;
@@ -159,7 +159,7 @@ body {
 .main {
   display: grid;
   grid-template-columns: 1fr 400px;
-  height: calc(100vh - 56px);
+  height: calc(100vh - 70px);
   overflow: hidden;
 }
 
@@ -170,11 +170,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  /* linhas sutis — bem suaves no tema claro */
   background-image:
     linear-gradient(rgba(148,156,190,0.18) 1px, transparent 1px),
     linear-gradient(90deg, rgba(148,156,190,0.18) 1px, transparent 1px);
   background-size: 32px 32px;
+  height: auto;
 }
 
 [data-theme="dark"] .arch-area {
@@ -185,6 +185,7 @@ body {
 
 /* ===== CICLO DE INSTRUÇÃO ===== */
 .cycle-bar {
+  flex-shrink: 0;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -238,12 +239,13 @@ body {
 
 /* ===== CPU ===== */
 .cpu-box {
+  flex: 1;
   border: 2px dashed var(--cpu-bd);
   border-radius: var(--radius);
   background: var(--cpu-bg);
   background-image: radial-gradient(circle, var(--cpu-bd) 1px, transparent 1px);
   background-size: 20px 20px;
-  padding: 24px 18px 18px;
+  padding: 28px 18px 24px;
   position: relative;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
@@ -281,18 +283,17 @@ body {
   border-radius: var(--radius);
   border: 1.5px solid var(--border);
   background: var(--surface);
-  padding: 16px;
+  padding: 28px 20px 32px;
   position: relative;
-  /* transição apenas em border/shadow — nunca em opacity, para não comprometer leitura */
   transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
   cursor: help;
 }
 
 .comp-label {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   color: var(--text3);
   margin-bottom: 8px;
   display: flex;
@@ -312,10 +313,10 @@ body {
 
 .comp-value {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 700;
   color: var(--text);
-  min-height: 34px;
+  min-height: 72px;
   display: flex;
   align-items: center;
   transition: color var(--transition);
@@ -329,6 +330,7 @@ body {
 .comp.cache { border-color: var(--cache-bd); background: var(--cache-bg); }
 .comp.ram   { border-color: var(--ram-bd);   background: var(--ram-bg);   }
 .comp.hd    { border-color: var(--hd-bd);    background: var(--hd-bg);    }
+#comp-hd { flex: 0.6; }
 
 .comp.ula   .comp-label { color: var(--ula-c);   }
 .comp.reg   .comp-label { color: var(--r-c);     }
@@ -336,14 +338,14 @@ body {
 .comp.ram   .comp-label { color: var(--ram-c);   }
 .comp.hd    .comp-label { color: var(--hd-c);    }
 
-/* estado ativo — só borda e glow piscam, nunca o conteúdo */
+/* estado ativo */
 .comp.active.ula   { border-color: var(--ula-c);   box-shadow: 0 0 0 3px rgba(219,39,119,0.15);  }
 .comp.active.reg   { border-color: var(--r-c);     box-shadow: 0 0 0 3px rgba(5,150,105,0.15);   }
 .comp.active.cache { border-color: var(--cache-c); box-shadow: 0 0 0 3px rgba(217,119,6,0.15);   }
 .comp.active.ram   { border-color: var(--ram-c);   box-shadow: 0 0 0 3px rgba(8,145,178,0.15);   }
 .comp.active.hd    { border-color: var(--hd-c);    box-shadow: 0 0 0 3px rgba(124,58,237,0.15);  }
 
-/* pulsação na borda/glow apenas — sem tocar na opacidade do bloco */
+/* pulsação na borda/glow */
 @keyframes pulse-glow-ula   { 0%,100% { box-shadow: 0 0 0 3px rgba(219,39,119,0.15); } 50% { box-shadow: 0 0 0 5px rgba(219,39,119,0.35); } }
 @keyframes pulse-glow-reg   { 0%,100% { box-shadow: 0 0 0 3px rgba(5,150,105,0.15);  } 50% { box-shadow: 0 0 0 5px rgba(5,150,105,0.35);  } }
 @keyframes pulse-glow-cache { 0%,100% { box-shadow: 0 0 0 3px rgba(217,119,6,0.15);  } 50% { box-shadow: 0 0 0 5px rgba(217,119,6,0.35);  } }
@@ -418,7 +420,7 @@ body {
 .hd-empty { font-size: 12px; color: var(--text3); font-style: italic; }
 
 /* ===== MEM ROW ===== */
-.mem-row { display: grid; grid-template-columns: 1fr 1.6fr; gap: 20px; }
+.mem-row { display: grid; grid-template-columns: 1fr 1.6fr; gap: 20px; flex: 1.2; }
 
 /* ===== SIDEBAR ===== */
 .sidebar {
@@ -734,20 +736,38 @@ body {
     height: auto;
     overflow: visible;
   }
-  .arch-area { height: auto; overflow-y: visible; }
-  .sidebar { border-left: none; border-top: 1px solid var(--border); overflow: visible; }
-  .log-area { max-height: 340px; }
+  .arch-area {
+    height: auto;
+    overflow-y: visible;
+    min-height: unset;
+  }
+  .sidebar {
+    border-left: none;
+    border-top: 1px solid var(--border);
+    overflow: visible;
+    max-height: none;
+  }
+  .log-area {
+    max-height: 340px;
+    overflow-y: auto;
+  }
 }
 
 @media (max-width: 700px) {
-  .arch-area { padding: 16px; gap: 14px; }
+  body { font-size: 14px; }
+  .arch-area { padding: 14px; gap: 12px; }
   .cpu-inner { grid-template-columns: 1fr 1fr; }
-  .mem-row   { grid-template-columns: 1fr; gap: 14px; }
+  .mem-row { grid-template-columns: 1fr; gap: 12px; }
+  .cycle-bar { flex-wrap: nowrap; overflow-x: auto; }
   .cycle-bar-label { display: none; }
   .cs-pt { display: none; }
   .logo-sub { display: none; }
   .gates-grid { grid-template-columns: 1fr; }
   .peek-label { display: none; }
+  .header { padding: 0 14px; }
+  .ctrl-row { grid-template-columns: 1fr; }
+  .op-grid { grid-template-columns: repeat(5, 1fr); }
+  .sidebar-section { padding: 12px 14px; }
 }
 
 /* ===== SCROLLBAR ===== */

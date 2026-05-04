@@ -141,7 +141,7 @@ function buildSteps(a, b, op) {
       tag: `Execute — ULA calcula ${o.label}`,
       tagClass: 'ula-tag',
       log: isLogical
-        ? `A ULA executou a operação <strong>${o.label}</strong> bit a bit. Cada bit de A é combinado com o bit correspondente de B usando a regra do ${o.label}. O resultado decimal é <strong>${result}</strong>.${logicalBinBlock()}`
+        ? `A ULA executou a operação <strong>${o.label}</strong>${isUnary ? '' : ' bit a bit'}. ${isUnary ? `Cada bit de A é invertido — 0 vira 1 e 1 vira 0.` : `Cada bit de A é combinado com o bit correspondente de B usando a regra do ${o.label}.`} O resultado decimal é <strong>${result}</strong>.${logicalBinBlock()}`
         : `A ULA calculou <strong>${a} ${o.sym} ${b} = ${result}</strong>. Este é o momento central da simulação: o processamento de fato aconteceu. Tudo antes era preparação — tudo depois é guardar o resultado.`,
       action: () => {
         setVal('val-ula', `= ${result}`);
