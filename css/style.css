@@ -730,11 +730,14 @@ body {
 .gate-truth tr.highlight td { background: rgba(219,39,119,0.1); font-weight: 700; color: var(--text); }
 
 /* ===== RESPONSIVIDADE ===== */
-@media (max-width: 1085px) {
+@media (max-width: 1000px) {
   .main {
     grid-template-columns: 1fr;
     height: auto;
     overflow: visible;
+  }
+  .header{
+    border-radius: 0 0 20px 0;
   }
   .arch-area {
     height: auto;
