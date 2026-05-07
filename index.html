@@ -128,7 +128,14 @@
       <!-- HD/SSD -->
       <div class="comp hd" id="comp-hd"
         data-tippy-content='<div class="tooltip-title">HD / SSD</div>Armazenamento permanente. Muito mais lento que a RAM, mas nunca perde os dados. É onde ficam seus arquivos e programas.'>
-        <div class="comp-label">HD / SSD <span class="comp-tag">Armazenamento</span></div>
+        <div class="comp-label">HD / SSD
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button onclick="clearHdStorage()" style="font-size:10px;padding:2px 8px;border-radius:4px;border:1px solid var(--hd-bd);background:var(--hd-bg);color:var(--hd-c);cursor:pointer;font-family:'IBM Plex Sans',sans-serif;font-weight:600;">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+            <span class="comp-tag">Armazenamento</span>
+          </div>
+        </div>
         <div class="hd-entries" id="hd-entries">
           <span class="hd-empty">Nenhum dado gravado ainda.</span>
         </div>

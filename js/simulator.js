@@ -197,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupTooltips();
   setupSpeedSlider();
   buildProgressDots(0);
+  loadHdFromStorage();
 });
 
 /* ===== BOTÕES DE OPERAÇÃO ===== */
@@ -285,7 +286,6 @@ function resetSim() {
   setVal('val-cache', '—', true);
 
   clearRam();
-  clearHd();
   clearLog();
   clearActiveComps();
   clearCycleSteps();
@@ -342,10 +342,43 @@ function addHdEntry(key, val) {
   entry.className = 'hd-entry new-entry';
   entry.innerHTML = `<span class="hd-key">${key}</span><span>${val}</span>`;
   container.appendChild(entry);
+  saveHdToStorage();
 }
 
 function clearHd() {
   document.getElementById('hd-entries').innerHTML = '<span class="hd-empty">Nenhum dado gravado ainda.</span>';
+}
+
+function saveHdToStorage() {
+  const entries = document.querySelectorAll('#hd-entries .hd-entry');
+  const data = [];
+  entries.forEach(e => {
+    data.push({
+      key: e.querySelector('.hd-key').textContent,
+      val: e.querySelector('span:last-child').textContent,
+    });
+  });
+  localStorage.setItem('cpull-hd', JSON.stringify(data));
+}
+
+function loadHdFromStorage() {
+  const raw = localStorage.getItem('cpull-hd');
+  if (!raw) return;
+  const data = JSON.parse(raw);
+  if (!data.length) return;
+  const container = document.getElementById('hd-entries');
+  container.innerHTML = '';
+  data.forEach(({ key, val }) => {
+    const entry = document.createElement('div');
+    entry.className = 'hd-entry';
+    entry.innerHTML = `<span class="hd-key">${key}</span><span>${val}</span>`;
+    container.appendChild(entry);
+  });
+}
+
+function clearHdStorage() {
+  localStorage.removeItem('cpull-hd');
+  clearHd();
 }
 
 function addLog(tag, tagClass, text) {
